@@ -1,5 +1,5 @@
-from .database import db,TeleUser,PiAccount,PiWallet
+from .database import db,TokpedItem, ItemSearch
 
 
 db.connect()
-db.create_tables([TeleUser,PiAccount,PiWallet])
+db.create_tables([TokpedItem, ItemSearch])

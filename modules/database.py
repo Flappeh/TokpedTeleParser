@@ -6,28 +6,19 @@ DIRNAME = os.getcwd()
 
 db = SqliteDatabase(DIRNAME + '/data/database.db')
 
-class TeleUser(Model):
+class TokpedItem(Model):
     name = CharField()
-    phone = CharField()
-    pasword = CharField()
+    price = IntegerField()
+    url = CharField()
     
     class Meta:
         database = db
+        
+class ItemSearch(Model):
+    query_string = CharField()
+    last_update = DateTimeField(default = datetime.now())
+    result = ForeignKeyField(TokpedItem, backref="search_result")
 
-
-class PiAccount(Model):
-    phone = CharField()
-    password = CharField()
-    last_used =  DateTimeField(default=datetime.now())
     class Meta:
         database = db
-    
 
-class PiWallet(Model):
-    public_key = CharField(null = True)
-    pass_phrase = CharField(null = True)
-    balance = CharField(null = True)
-    last_update = DateTimeField(default=datetime.now())
-    class Meta:
-        database = db
-    
