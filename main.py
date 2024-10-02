@@ -18,15 +18,15 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if check_time(update):
         return
     await update.message.reply_text("""
-*Pi Wallet Bot*
+*Tokped Notifier Bot*
 
 Command yang dapat dilakukan:
 
 /help \\-\\> Show command ini
 
-/phrase *<24\\-phrase\\>* \\-\\> Perintah bot untuk search wallet berdasarkan 24 word phrase
+/add\\_item \\-\\> Tambah item ke list yang dimonitor
 
-/wallet *<public\\-key\\>* \\-\\> Perintah bot untuk search wallet berdasarkan public key
+/list\\_job \\-\\> List semua item yang sedang di
 
 /change \\-\\> *Ganti user* Pi Account
 """,
