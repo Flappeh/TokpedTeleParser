@@ -7,7 +7,6 @@ from selenium.webdriver.firefox.options import Options
 import multiprocessing
 import os
 
-load_dotenv(override=True)
 
 # Template url https://www.tokopedia.com/search?navsource=&ob=9&q=gtx%201660&pmin=1000000&pmax=3000000
 
@@ -54,26 +53,32 @@ def parse_content(content: bytes):
         result.append(item)
     return result
 
-def get_data(input: str):
-    data = search_by_params(input)
+def get_data(data):
+    data = search_by_params(data['product_name'], data['min_price'], data['max_price'])
     result = parse_content(data)
     print(json.dumps(result))
 
-if __name__ == "__main__":
-    data_to_search = [
-        'Lenovo Ideapad',
-        'Iphone 11',
-        'GTX 1060',
-        'Ryzen 7800x',
-        'Samsung S10'
-    ]
-    processes = []
-    for i in data_to_search:
-        process = multiprocessing.Process(target=get_data, args=(i,))
-        processes.append(process)
-        process.start()
+def start_item_search(data):
+    print(f"Entered user data {data}")
+    process = multiprocessing.Process(target=get_data, args=(data,))
+    process.start()
+    process.join()
+
+# if __name__ == "__main__":
+#     data_to_search = [
+#         'Lenovo Ideapad',
+#         'Iphone 11',
+#         'GTX 1060',
+#         'Ryzen 7800x',
+#         'Samsung S10'
+#     ]
+#     processes = []
+#     for i in data_to_search:
+#         process = multiprocessing.Process(target=get_data, args=(i,))
+#         processes.append(process)
+#         process.start()
     
-    for i in processes:
-        i.join()
-    # get_data('Lenovo Ideapad')
-    print("Dones!")
+#     for i in processes:
+#         i.join()
+#     # get_data('Lenovo Ideapad')
+#     print("Dones!")
