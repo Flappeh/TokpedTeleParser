@@ -1,5 +1,5 @@
-from .database import db,TokpedItem, ItemSearch
+from .database import db,TokpedItem, ItemSearch, NotifyItem
 
 
 db.connect()
-db.create_tables([TokpedItem, ItemSearch])
+db.create_tables([TokpedItem, ItemSearch, NotifyItem])

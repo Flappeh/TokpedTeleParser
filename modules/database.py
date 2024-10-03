@@ -17,8 +17,13 @@ class TokpedItem(Model):
 class ItemSearch(Model):
     query_string = CharField()
     last_update = DateTimeField(default = datetime.now())
-    result = ForeignKeyField(TokpedItem, backref="search_result")
+    result = CharField()
 
     class Meta:
         database = db
 
+class NotifyItem(Model):
+    query_string = CharField()
+    message = CharField()
+    class Meta:
+        database = db
