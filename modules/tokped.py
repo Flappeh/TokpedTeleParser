@@ -7,7 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import multiprocessing
 from time import sleep
-from .utils import store_item
+from .utils import store_item, store_search
 
 # Template url https://www.tokopedia.com/search?navsource=&ob=9&q=gtx%201660&pmin=1000000&pmax=3000000
 
@@ -64,13 +64,17 @@ def parse_content(content: bytes):
     return result
 
 def get_data(data):
+    query = data["product_name"]
     data = search_by_params(data['product_name'], data['min_price'], data['max_price'])
     result = parse_content(data)
     print("Got result")
     print(len(result))
+    items = []
     for i in result:
-        store_item(i)
-
+        items.append(store_item(i))
+    print(type(query))
+    store_search(query,items)
+    
 def start_item_search(data):
     print(f"Entered user data {data}")
     # get_data(data)

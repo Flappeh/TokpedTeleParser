@@ -33,17 +33,30 @@ def store_item(data):
         item.price = data["product_price"]
         item.url = data["product_link"]
         item.save()
-        return item
+        return item.id
     except:
         new_item = TokpedItem.create(
             name = data['product_name'],
             price = data['product_price'],
             url = data['product_link']
         )
-        return new_item
+        return new_item.id
 
-def store_phrase(query_string, items: list[TokpedItem]):
-    pass
+def store_search(query_string: str, items: list[TokpedItem]):
+    try:
+        search = ItemSearch.get(
+            ItemSearch.query_string == query_string
+        )
+        search.last_update = datetime.now()
+        search.result = items
+        search.save()
+        return search
+    except:
+        new_search = ItemSearch.create(
+            result = items,
+            query_string = query_string
+        )
+        return new_search
 
 # def store_phrase(phrase:str, balance: str):
 #     try:
