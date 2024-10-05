@@ -23,7 +23,17 @@ class ItemSearch(Model):
         database = db
 
 class NotifyItem(Model):
+    chat_id = IntegerField(null = True)
     query_string = CharField()
     message = CharField()
+    created_date = DateTimeField(default = datetime.now())
+    class Meta:
+        database = db
+
+class RunningJob(Model):
+    chat_id = IntegerField(null=True)
+    job_name = CharField()
+    search_id = IntegerField()
+    
     class Meta:
         database = db

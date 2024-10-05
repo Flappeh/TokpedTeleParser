@@ -4,7 +4,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 from modules.environment import BOT_USERNAME,TOKEN
 from typing import List
 import datetime
-from modules.utils import get_logger
+from modules.utils import get_logger, import_all_notif, remove_notif_from_id
 from modules.tokped import start_item_search
 import pytz
 
@@ -72,7 +72,7 @@ async def item_start_command(update: Update, context:CallbackContext):
 
 async def item_get_name(update: Update, context: CallbackContext) -> int:
     data = update.message.text
-    context.user_data['product_name'] = data
+    context.user_data['product_name'] = data.lower()
     await update.message.reply_text(f"Minimum price untuk item {data}")
     return MIN_PRICE
 
@@ -111,7 +111,11 @@ async def item_confirm_choices(update: Update, context: CallbackContext):
     if data.lower() != 'y' and data.lower() != 'n':
         await update.message.reply_text("Reply dengan membalas y/n")
         return CONFIRM
+    elif data.lower() == 'n':
+        await update.message.reply_text("Job telah di cancel")
+        return ConversationHandler.END
     await update.message.reply_text("Mulai proses produk")
+    context.user_data["chat_id"] = update.effective_chat.id
     start_item_search(context.user_data)
     return ConversationHandler.END
 
@@ -155,7 +159,42 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"Update {update} caused error : {context.error}")
+
+
+# JOB HANDLING
+
+async def run_notification_job(context: ContextTypes.DEFAULT_TYPE):
+    logger.info("Checking for pending notifications")
+    try:
+        data = import_all_notif()
+        for i in data:
+            await context.bot.send_message(
+                chat_id=i.chat_id,
+                text=i.message,
+                parse_mode=ParseMode.HTML
+                )
+            remove_notif_from_id(i.get_id())
+    except:
+        logger.error("Unable to run notification bot")
+
+# Initial Load Notify
+def init_notify_job(app : Application):
+    job_queue = app.job_queue
+    logger.info("Initializing notification job")
+    # last_chat_id = get_last_notif_chat_id()
+    # if last_chat_id == None:
+    #     logger.info("No notifications to be sent!")
+    #     return
+    try:
+        job_queue.run_repeating(
+            callback = run_notification_job,
+            interval=60,
+            first=0
+        )
+    except:
+        logger.error("Error running notification job!")
     
+
 
 if __name__ == "__main__":
     builder = Application.builder()
@@ -188,6 +227,8 @@ if __name__ == "__main__":
     # Errors
     app.add_error_handler(handle_error)
     
+    
     logger.info("BOT RUNNING")
+    init_notify_job(app)
     app.run_polling(poll_interval=3)
     

@@ -63,9 +63,9 @@ def parse_content(content: bytes):
         result.append(item)
     return result
 
-def get_data(data):
-    query = data["product_name"]
-    data = search_by_params(data['product_name'], data['min_price'], data['max_price'])
+def get_data(input_data):
+    query = input_data["product_name"]
+    data = search_by_params(input_data['product_name'], input_data['min_price'], input_data['max_price'])
     result = parse_content(data)
     items = []
     for i in result:
@@ -80,7 +80,10 @@ def get_data(data):
         new_data = check_difference(old_items, items)
         if len(new_data) > 0:
             print("New data found!")
-            store_notify_item(query, new_data)
+            store_notify_item(
+                query_string = query, 
+                item_ids = new_data,
+                chat_id = int(input_data["chat_id"]))
         else:
             print("Data masih sama")
             

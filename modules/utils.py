@@ -4,6 +4,8 @@ import logging
 import sys
 from .database import ItemSearch, TokpedItem, NotifyItem
 from datetime import datetime, timedelta
+from typing import List
+
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 loggers = {}
@@ -91,25 +93,44 @@ def store_search(query_string: str, item_list: list[str]):
         return True, []
 
 
-def store_notify_item(query_string: str, item_id: list[str]):
+def store_notify_item(query_string: str, item_ids: list[str], chat_id : int):
     message = "New item found\n"
-    for i in item_id:
+    for i in item_ids:
         item = get_tokped_item(i)
         message += f"""
 
-Judul : {item.name}
-Price : {item.price}
-Url : {item.url}
+<b>Judul</b> : {item.name}
+<b>Price</b> : Rp {item.price}:,
+Url : <a href="{item.url}">url</a>
 """
     try:
         NotifyItem.create(
             query_string = query_string,
-            message = message
+            message = message,
+            chat_id = chat_id
         )
     except:
         logger.error("Error occured. Unable to create notification item")
     
+def import_all_notif() -> List[NotifyItem]:
+    try:
+        notifications  = NotifyItem.select()
+        return notifications
+    except:
+        logger.error("Error unable to retrieve notifications")
 
+def get_last_notif_chat_id() -> int | None:
+    try:
+        return NotifyItem.select().order_by(NotifyItem.created_date.desc()).limit(1).chat_id
+    except:
+        logger.error("Error retrieving last notification chat id")
+        return None
+
+def remove_notif_from_id(id:int):
+    try:
+        NotifyItem.delete_by_id(id)
+    except:
+        logger.error(f"Unable to remove notification with id : {id}")
 # def store_phrase(phrase:str, balance: str):
 #     try:
 #         wallet = PiWallet.get(
