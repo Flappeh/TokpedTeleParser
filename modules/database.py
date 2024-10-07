@@ -33,7 +33,7 @@ class NotifyItem(Model):
 class RunningJob(Model):
     chat_id = IntegerField(null=True)
     job_name = CharField()
-    search_id = IntegerField()
+    query = CharField()
     
     class Meta:
         database = db

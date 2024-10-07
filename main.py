@@ -1,12 +1,14 @@
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters, CallbackQueryHandler, CallbackContext, ConversationHandler, Defaults
-from modules.environment import BOT_USERNAME,TOKEN
+from modules.environment import BOT_USERNAME,TOKEN, SEARCH_INTERVAL
 from typing import List
 import datetime
-from modules.utils import get_logger, import_all_notif, remove_notif_from_id
+from modules.utils import get_logger, import_all_notif, remove_notif_from_id, get_all_job, store_job_data, check_job_data
 from modules.tokped import start_item_search
 import pytz
+import random
+import string
 
 logger = get_logger(__name__)
 # Commands
@@ -24,6 +26,23 @@ def validate_price(data: str):
         return True, val
     except:
         return False, None
+
+async def start_query_job(context: ContextTypes.DEFAULT_TYPE):
+    job = context.job
+    data = job.data
+    start_item_search(data)
+
+async def schedule_query_job(update: Update, context: CallbackContext, data):
+    job_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
+    store_job_data(query=data["product_name"], chat_id=data["chat_id"], job_name=job_name)
+    context.job_queue.run_repeating(
+        callback=start_query_job,
+        chat_id=update.effective_chat.id,
+        data=data,
+        name=job_name,
+        first=0,
+        interval= SEARCH_INTERVAL
+    )
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if check_time(update):
@@ -85,7 +104,6 @@ async def item_get_min_price(update: Update, context: CallbackContext) -> int:
     await update.message.reply_text("Masukkan harga maksimum")
     return MAX_PRICE
     
-
 async def item_get_max_price(update: Update, context: CallbackContext) -> int:
     result,value = validate_price(update.message.text)
     if result == False:
@@ -114,10 +132,30 @@ async def item_confirm_choices(update: Update, context: CallbackContext):
     elif data.lower() == 'n':
         await update.message.reply_text("Job telah di cancel")
         return ConversationHandler.END
-    await update.message.reply_text("Mulai proses produk")
     context.user_data["chat_id"] = update.effective_chat.id
-    start_item_search(context.user_data)
+    if check_job_data(context.user_data["product_name"]):
+        await update.message.reply_text("Item sudah ada dalam list yang dicari!")
+        return ConversationHandler.END
+    
+    await update.message.reply_text("Mulai proses produk")
+    await schedule_query_job(update, context, context.user_data)
     return ConversationHandler.END
+
+async def list_job_command(update: Update, context: CallbackContext):
+    data = get_all_job()
+    message = """
+<b>List Job Berjalan</b>
+
+"""
+    if len(data) > 0:
+        for index,item in enumerate(data):
+            message += f"""\n{index + 1}. <b>Job</b> : {item.job_name}
+<b>Item Name</b>: {item.query}
+            """
+    else:
+        message += "Belum ada item yang di search"
+    await update.message.reply_text(text=message, parse_mode=ParseMode.HTML)
+
 
 # Responses
 
@@ -178,13 +216,9 @@ async def run_notification_job(context: ContextTypes.DEFAULT_TYPE):
         logger.error("Unable to run notification bot")
 
 # Initial Load Notify
-def init_notify_job(app : Application):
+def init_all_jobs(app : Application):
     job_queue = app.job_queue
     logger.info("Initializing notification job")
-    # last_chat_id = get_last_notif_chat_id()
-    # if last_chat_id == None:
-    #     logger.info("No notifications to be sent!")
-    #     return
     try:
         job_queue.run_repeating(
             callback = run_notification_job,
@@ -194,7 +228,10 @@ def init_notify_job(app : Application):
     except:
         logger.error("Error running notification job!")
     
-
+    # try:
+    #     job_queue.run_repeating(
+    #         callback=
+    #     )
 
 if __name__ == "__main__":
     builder = Application.builder()
@@ -220,6 +257,7 @@ if __name__ == "__main__":
     # Command
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(CommandHandler('list_job', list_job_command))
     app.add_handler(conv_handler)
     # Messages
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
@@ -229,6 +267,6 @@ if __name__ == "__main__":
     
     
     logger.info("BOT RUNNING")
-    init_notify_job(app)
+    init_all_jobs(app)
     app.run_polling(poll_interval=3)
     

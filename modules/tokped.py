@@ -93,27 +93,3 @@ def start_item_search(data):
     process = multiprocessing.Process(target=get_data, args=(data,))
     process.start()
 
-# if __name__ == "__main__":
-#     # data_to_search = [
-#     #     'Lenovo Ideapad',
-#     #     'Iphone 11',
-#     #     'GTX 1060',
-#     #     'Ryzen 7800x',
-#     #     'Samsung S10'
-#     # ]
-#     # processes = []
-#     # for i in data_to_search:
-#     #     process = multiprocessing.Process(target=get_data, args=(i,))
-#     #     processes.append(process)
-#     #     process.start()
-    
-#     # for i in processes:
-#     #     i.join()
-#     get_data(
-#         {
-#             "product_name": "Lenovo Ideapad",
-#             "min_price": 3000000,
-#             "max_price": 9000000
-#         }
-#     )
-#     print("Dones!")

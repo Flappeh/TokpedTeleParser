@@ -2,7 +2,7 @@ from time import time
 import os
 import logging
 import sys
-from .database import ItemSearch, TokpedItem, NotifyItem
+from .database import ItemSearch, TokpedItem, NotifyItem, RunningJob
 from datetime import datetime, timedelta
 from typing import List
 
@@ -92,7 +92,6 @@ def store_search(query_string: str, item_list: list[str]):
         )
         return True, []
 
-
 def store_notify_item(query_string: str, item_ids: list[str], chat_id : int):
     message = "New item found\n"
     for i in item_ids:
@@ -100,7 +99,7 @@ def store_notify_item(query_string: str, item_ids: list[str], chat_id : int):
         message += f"""
 
 <b>Judul</b> : {item.name}
-<b>Price</b> : Rp {item.price}:,
+<b>Price</b> : Rp {item.price:,}
 Url : <a href="{item.url}">url</a>
 """
     try:
@@ -131,29 +130,28 @@ def remove_notif_from_id(id:int):
         NotifyItem.delete_by_id(id)
     except:
         logger.error(f"Unable to remove notification with id : {id}")
-# def store_phrase(phrase:str, balance: str):
-#     try:
-#         wallet = PiWallet.get(
-#             PiWallet.pass_phrase == phrase
-#         )
-#         wallet.balance = balance
-#         wallet.last_update = datetime.now()
-#         wallet.save()
-#     except:
-#         logger.info("Wallet doesn't exist, creating one")
-#         PiWallet.create(
-#             balance = balance,
-#             pass_phrase = phrase
-#         )
-        
-        
-# def get_wallet_account() -> PiAccount:
-#     account  = PiAccount.select().where(PiAccount.last_used < datetime.now() - timedelta(days=1)).get()
-#     account.last_used = datetime.now()
-#     account.save()
-#     print(f"Account : {account}")
-#     return account
 
-# def delete_wallet_account(account: PiAccount):
-#     PiAccount.delete(account)
+def get_all_job() -> List[RunningJob]:
+    try:
+        jobs = RunningJob.select()
+        return jobs
+    except:
+        logger.error("Error retrieving list of jobs")
 
+def check_job_data(query:str):
+    try:
+        RunningJob.get(RunningJob.query == query)
+        return True
+    except:
+        return False
+
+def store_job_data(query: str, chat_id: int, job_name:str):
+    try:
+        logger.info(f"Storing job for query : {query}")
+        RunningJob.create(
+            query=query,
+            chat_id = chat_id,
+            job_name = job_name
+        )
+    except:
+        logger.error("Error on storing job data")
