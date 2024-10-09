@@ -74,7 +74,7 @@ def get_data(input_data):
             continue
         items.append(item_id)
     print(f"Result : {items}")
-    new_search, old_items = store_search(query,items)
+    new_search, old_items = store_search(query,items, input_data["min_price"],input_data["max_price"])
     new_data = []
     if not new_search:
         new_data = check_difference(old_items, items)

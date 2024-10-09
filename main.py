@@ -4,7 +4,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 from modules.environment import BOT_USERNAME,TOKEN, SEARCH_INTERVAL
 from typing import List
 import datetime
-from modules.utils import get_logger, import_all_notif, remove_notif_from_id, get_all_job, store_job_data, check_job_data
+from modules.utils import get_logger, import_all_notif, remove_notif_from_id, get_all_job, store_job_data, check_job_data, get_all_job_data, delete_job_data
 from modules.tokped import start_item_search
 import pytz
 import random
@@ -30,6 +30,7 @@ def validate_price(data: str):
 async def start_query_job(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
     data = job.data
+    print(data)
     start_item_search(data)
 
 async def schedule_query_job(update: Update, context: CallbackContext, data):
@@ -201,6 +202,20 @@ async def handle_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # JOB HANDLING
 
+async def stop_running_job(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        if check_time(update):
+            return
+        text: str = context.args[0]
+        delete_job_data(text)
+        jobs = context.job_queue.get_jobs_by_name(text)
+        for job in jobs:
+            job.schedule_removal()
+        await update.message.reply_text("Finished deleting job with name "+ text)
+    
+    except:
+        await update.message.reply_text("Error deleting job")
+
 async def run_notification_job(context: ContextTypes.DEFAULT_TYPE):
     logger.info("Checking for pending notifications")
     try:
@@ -227,11 +242,22 @@ def init_all_jobs(app : Application):
         )
     except:
         logger.error("Error running notification job!")
-    
-    # try:
-    #     job_queue.run_repeating(
-    #         callback=
-    #     )
+    logger.info("Initializing item job")
+    try:
+        data = get_all_job_data()
+        if len(data) > 0:      
+            for i in data:
+                print(f"Initializing job {i}")
+                job_queue.run_repeating(
+                    callback=start_query_job,
+                    chat_id=i["chat_id"],
+                    data=i,
+                    name=i["job_name"],
+                    first=0,
+                    interval= SEARCH_INTERVAL
+                )
+    except Exception as e:
+        logger.error("Error initializing items job, error : "+e)
 
 if __name__ == "__main__":
     builder = Application.builder()
@@ -257,6 +283,7 @@ if __name__ == "__main__":
     # Command
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(CommandHandler('stop', stop_running_job))
     app.add_handler(CommandHandler('list_job', list_job_command))
     app.add_handler(conv_handler)
     # Messages

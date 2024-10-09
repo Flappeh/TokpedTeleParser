@@ -17,6 +17,8 @@ class TokpedItem(Model):
 class ItemSearch(Model):
     query_string = CharField()
     last_update = DateTimeField(default = datetime.now())
+    min_price = IntegerField()
+    max_price = IntegerField()
     result = CharField()
 
     class Meta:

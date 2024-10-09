@@ -72,7 +72,7 @@ def store_item(data):
         )
         return str(new_item.id)
 
-def store_search(query_string: str, item_list: list[str]):
+def store_search(query_string: str, item_list: list[str], min_price: int, max_price: int):
     try:
         item_ids = ','.join(item_list)
         
@@ -88,7 +88,9 @@ def store_search(query_string: str, item_list: list[str]):
     except:
         ItemSearch.create(
             result = item_ids,
-            query_string = query_string
+            query_string = query_string,
+            min_price = min_price,
+            max_price = max_price
         )
         return True, []
 
@@ -155,3 +157,43 @@ def store_job_data(query: str, chat_id: int, job_name:str):
         )
     except:
         logger.error("Error on storing job data")
+
+def get_search_from_query(query) -> ItemSearch:
+    try:
+        data = ItemSearch.get(
+            ItemSearch.query_string == query
+        )
+        return data
+    except:
+        logger.error(f"Errr getting query data for item : {query}")
+        raise
+
+def delete_job_data(job_name:str):
+    try:
+        logger.info(f"Deleting job : {job_name}")
+        job = RunningJob.get(RunningJob.job_name == job_name)
+        job.delete_instance()
+    except:
+        logger.error(f"Error deleting job with name : {job_name}" )
+        
+def get_all_job_data():
+    try:
+        logger.info("Getting job data stored in database")
+        jobs = RunningJob.select()
+        data = []
+        if len(jobs) < 1:
+            return data
+        for i in jobs:
+            searchItem = get_search_from_query(i.query)
+            data.append(
+                {
+                    "chat_id": i.chat_id,
+                    "job_name": i.job_name,
+                    "product_name": i.query,
+                    "min_price": searchItem.min_price,
+                    "max_price": searchItem.max_price
+                }
+            )
+        return data
+    except:
+        logger.error("Error getting job data")
