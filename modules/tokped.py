@@ -73,7 +73,7 @@ def get_data(input_data):
         if item_id in items:
             continue
         items.append(item_id)
-    print(f"Result : {items}")
+    # print(f"Result : {items}")
     new_search, old_items = store_search(query,items, input_data["min_price"],input_data["max_price"])
     new_data = []
     if not new_search:

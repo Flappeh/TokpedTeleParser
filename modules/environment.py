@@ -9,8 +9,8 @@ yaml_config = {}
 with open('./data/config.yaml', 'r') as f:
     yaml_config = yaml.safe_load(f)
     
-TOKEN = os.getenv("TOKEN") 
-BOT_USERNAME  = os.getenv("BOT_USERNAME") 
+TOKEN = yaml_config["BOT_TOKEN"] 
+BOT_USERNAME  = yaml_config["BOT_USERNAME"] 
 SEARCH_INTERVAL = yaml_config["SEARCH_INTERVAL"]
 
 def get_all_env():

@@ -30,14 +30,14 @@ logger = get_logger()
 def check_difference(old_items: list, new_items: list):
     try:
         new_list = []
-        print(f"""
-OLD ITEMS = {old_items}
+#         print(f"""
+# OLD ITEMS = {old_items}
 
 
-NEW ITEMS = {new_items}              
+# NEW ITEMS = {new_items}              
               
               
-""")
+# """)
         for i in new_items:
             if i in old_items:
                 continue
@@ -102,7 +102,7 @@ def store_notify_item(query_string: str, item_ids: list[str], chat_id : int):
 
 <b>Judul</b> : {item.name}
 <b>Price</b> : Rp {item.price:,}
-Url : <a href="{item.url}">url</a>
+Url : <a href="{item.url}">Link item</a>
 """
     try:
         NotifyItem.create(
