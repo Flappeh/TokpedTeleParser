@@ -197,3 +197,4 @@ def get_all_job_data():
         return data
     except:
         logger.error("Error getting job data")
+        return[]
