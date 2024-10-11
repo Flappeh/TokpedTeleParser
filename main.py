@@ -245,7 +245,7 @@ def init_all_jobs(app : Application):
     logger.info("Initializing item job")
     try:
         data = get_all_job_data()
-        if len(data) > 0:      
+        if data:      
             for i in data:
                 print(f"Initializing job {i}")
                 job_queue.run_repeating(
