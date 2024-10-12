@@ -9,6 +9,9 @@ from modules.tokped import start_item_search
 import pytz
 import random
 import string
+import multiprocessing
+import sys 
+
 
 logger = get_logger(__name__)
 # Commands
@@ -260,6 +263,9 @@ def init_all_jobs(app : Application):
         logger.error("Error initializing items job, error : "+e)
 
 if __name__ == "__main__":
+    if sys.platform.startswith('win'):
+        # On Windows calling this function is necessary.
+        multiprocessing.freeze_support()
     builder = Application.builder()
     builder.token(TOKEN)
     builder.defaults(Defaults(tzinfo=pytz.timezone('Asia/Jakarta')))
