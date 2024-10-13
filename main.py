@@ -33,7 +33,6 @@ def validate_price(data: str):
 async def start_query_job(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
     data = job.data
-    print(data)
     start_item_search(data)
 
 async def schedule_query_job(update: Update, context: CallbackContext, data):
