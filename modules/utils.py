@@ -72,7 +72,7 @@ def store_item(data):
         )
         return str(new_item.id)
 
-def store_search(query_string: str, item_list: list[str], min_price: int, max_price: int):
+def store_search(query_string: str, item_list: list[str], min_price: int, max_price: int, url: str):
     try:
         item_ids = ','.join(item_list)
         
@@ -80,7 +80,7 @@ def store_search(query_string: str, item_list: list[str], min_price: int, max_pr
             ItemSearch.query_string == query_string
         )
         old_items = search.result.split(',')
-        
+        search.url = url
         search.last_update = datetime.now()
         search.result = item_ids
         search.save()
@@ -90,7 +90,8 @@ def store_search(query_string: str, item_list: list[str], min_price: int, max_pr
             result = item_ids,
             query_string = query_string,
             min_price = min_price,
-            max_price = max_price
+            max_price = max_price,
+            url = url
         )
         return True, []
 

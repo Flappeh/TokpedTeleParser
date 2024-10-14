@@ -20,6 +20,7 @@ class ItemSearch(Model):
     min_price = IntegerField()
     max_price = IntegerField()
     result = CharField()
+    url = CharField()
 
     class Meta:
         database = db
@@ -27,7 +28,7 @@ class ItemSearch(Model):
 class NotifyItem(Model):
     chat_id = IntegerField(null = True)
     query_string = CharField()
-    message = CharField()
+    message = CharField(max_length=10000)
     created_date = DateTimeField(default = datetime.now())
     class Meta:
         database = db
@@ -39,3 +40,4 @@ class RunningJob(Model):
     
     class Meta:
         database = db
+        

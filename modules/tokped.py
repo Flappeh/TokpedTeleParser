@@ -7,7 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import multiprocessing
 from time import sleep
-
+import random
 from selenium.webdriver.firefox.service import Service
 from .utils import store_item, store_search, check_difference, store_notify_item, get_logger
 
@@ -18,22 +18,34 @@ MAIN_URL = "https://tokopedia.com/search?"
 
 logger = get_logger()
 
-class TokpedParser(Firefox):
+def get_user_agent():
+    with open('data/user-agents.txt', 'r') as f:
+        data = [line.rstrip() for line in f]
+    agent = random.choice(data)
+    return agent
+
+class TokpedParser(Chrome):
+# class TokpedParser(Firefox):
     
-    def __init__(self, options: FirefoxOptions = None, service: Service = None, keep_alive: bool = True) -> None:
-        options = FirefoxOptions()
-        options.headless = True
-        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
+    def __init__(self, options: ChromeOptions = None, service: Service = None, keep_alive: bool = True) -> None:
+        options = ChromeOptions()
+        # options = FirefoxOptions()
+        # options.headless = True
+        options.add_argument(f"user-agent={get_user_agent()}")
+        # options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
+        options.add_argument("--headless=new")
         super().__init__(options, service, keep_alive)
-        self.driver = Firefox(options=options)
+        # self.driver = Chrome(options=options)
+        # self.driver = Firefox(options=options)
+        self.set_page_load_timeout(60)
         
     def browser_get_data(self, url):
-        self.driver.get(url)
+        self.get(url)
         for _ in range(3):
-            body = self.driver.find_element(by=By.CSS_SELECTOR, value="body")
+            body = self.find_element(by=By.CSS_SELECTOR, value="body")
             body.send_keys(Keys.PAGE_DOWN)
             sleep(0.2)
-        return self.driver.page_source
+        return self.page_source
 
     def search_by_params(self, product_name: str, min_price: int = 0, max_price:int = 0):
         params = {}
@@ -45,7 +57,7 @@ class TokpedParser(Firefox):
         params["condition"] = 2 # Filter only used
         url = MAIN_URL + urlencode(params)
         data = self.browser_get_data(url)
-        return data
+        return url, data
 
     def parse_content(self, content: bytes):
         soup = BeautifulSoup(content, 'html.parser')
@@ -53,10 +65,8 @@ class TokpedParser(Firefox):
         result = []
         for i in products:
             product_link = i.get("href")
-            
             if "topads" in product_link:
-                continue
-            
+                continue 
             item = {}
             product_box = i.select('div')[0]
             text_box = product_box.find_all('div', recursive=False)[1]
@@ -71,7 +81,7 @@ class TokpedParser(Firefox):
 
     def get_data(self, input_data):
         query = input_data["product_name"]
-        data = self.search_by_params(input_data['product_name'], input_data['min_price'], input_data['max_price'])
+        url, data = self.search_by_params(input_data['product_name'], input_data['min_price'], input_data['max_price'])
         result = self.parse_content(data)
         items = []
         for i in result:
@@ -80,7 +90,7 @@ class TokpedParser(Firefox):
                 continue
             items.append(item_id)
         # print(f"Result : {items}")
-        new_search, old_items = store_search(query,items, input_data["min_price"],input_data["max_price"])
+        new_search, old_items = store_search(query,items, input_data["min_price"],input_data["max_price"], url)
         new_data = []
         if not new_search:
             new_data = check_difference(old_items, items)
@@ -96,7 +106,7 @@ class TokpedParser(Firefox):
 def start_search_process(args):
     parser = TokpedParser()
     parser.get_data(args)
-    parser.close()
+    parser.quit()
 
 def start_item_search(data):
     logger.info(f"Starting search :  {data['product_name']}")
