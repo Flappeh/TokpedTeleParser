@@ -30,19 +30,13 @@ logger = get_logger()
 def check_difference(old_items: list, new_items: list):
     try:
         new_list = []
-#         print(f"""
-# OLD ITEMS = {old_items}
-
-
-# NEW ITEMS = {new_items}              
-              
-              
-# """)
         for i in new_items:
             if i in old_items:
                 continue
             else:
                 new_list.append(i)
+        if len(new_list) > 0:
+            print(f"Old {old_items}\nNew: {new_list}")
         return new_list
     except:
         logger.error("Error checking for similarities between list")

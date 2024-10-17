@@ -10,7 +10,7 @@ from time import sleep
 import random
 from selenium.webdriver.firefox.service import Service
 from .utils import store_item, store_search, check_difference, store_notify_item, get_logger
-
+from .environment import SEARCH_INTERVAL
 # Template url https://www.tokopedia.com/search?navsource=&ob=9&q=gtx%201660&pmin=1000000&pmax=3000000
 
 
@@ -32,12 +32,11 @@ class TokpedParser(Chrome):
         # options = FirefoxOptions()
         # options.headless = True
         options.add_argument(f"user-agent={get_user_agent()}")
-        # options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
         options.add_argument("--headless=new")
         super().__init__(options, service, keep_alive)
         # self.driver = Chrome(options=options)
         # self.driver = Firefox(options=options)
-        self.set_page_load_timeout(60)
+        self.set_page_load_timeout(SEARCH_INTERVAL * 2 / 3 )
         
     def browser_get_data(self, url):
         self.get(url)

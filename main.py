@@ -239,7 +239,7 @@ def init_all_jobs(app : Application):
     try:
         job_queue.run_repeating(
             callback = run_notification_job,
-            interval=60,
+            interval=SEARCH_INTERVAL,
             first=0
         )
     except:
