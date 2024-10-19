@@ -19,7 +19,7 @@ class ItemSearch(Model):
     last_update = DateTimeField(default = datetime.now())
     min_price = IntegerField()
     max_price = IntegerField()
-    result = CharField()
+    result = CharField(max_length=10000)
     url = CharField()
 
     class Meta:

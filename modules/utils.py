@@ -76,7 +76,7 @@ def store_search(query_string: str, item_list: list[str], min_price: int, max_pr
         old_items = search.result.split(',')
         search.url = url
         search.last_update = datetime.now()
-        search.result = item_ids
+        # search.result = item_ids
         search.save()
         return False, old_items
     except:
@@ -88,7 +88,20 @@ def store_search(query_string: str, item_list: list[str], min_price: int, max_pr
             url = url
         )
         return True, []
-
+    
+def update_search(query_string: str, item_list: list[str]):
+    try:
+        item_ids = ','.join(item_list)
+        
+        search = ItemSearch.get(
+            ItemSearch.query_string == query_string
+        )
+        # old_items = search.result.split(',')
+        search.result = search.result + ',' + item_ids
+        search.save()
+    except:
+        logger.error("Error updating search query")
+        
 def store_notify_item(query_string: str, item_ids: list[str], chat_id : int):
     message = "New item found\n"
     for i in item_ids:

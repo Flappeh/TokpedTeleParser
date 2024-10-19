@@ -9,7 +9,7 @@ import multiprocessing
 from time import sleep
 import random
 from selenium.webdriver.firefox.service import Service
-from .utils import store_item, store_search, check_difference, store_notify_item, get_logger
+from .utils import store_item, store_search, update_search, check_difference, store_notify_item, get_logger
 from .environment import SEARCH_INTERVAL
 # Template url https://www.tokopedia.com/search?navsource=&ob=9&q=gtx%201660&pmin=1000000&pmax=3000000
 
@@ -89,12 +89,13 @@ class TokpedParser(Chrome):
                 continue
             items.append(item_id)
         # print(f"Result : {items}")
-        new_search, old_items = store_search(query,items, input_data["min_price"],input_data["max_price"], url)
+        new_search, old_items = store_search(query, items, input_data["min_price"],input_data["max_price"], url)
         new_data = []
         if not new_search:
             new_data = check_difference(old_items, items)
             if len(new_data) > 0:
                 logger.info("New data found!")
+                update_search(query, items)
                 store_notify_item(
                     query_string = query, 
                     item_ids = new_data,
