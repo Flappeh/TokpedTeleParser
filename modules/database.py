@@ -1,10 +1,11 @@
 from peewee import *
 import os
 from datetime import datetime
+from playhouse.sqliteq import SqliteQueueDatabase
 
 DIRNAME = os.getcwd()
 
-db = SqliteDatabase(DIRNAME + '/data/database.db')
+db = SqliteQueueDatabase(DIRNAME + '/data/database.db')
 
 class TokpedItem(Model):
     name = CharField()
@@ -19,7 +20,6 @@ class ItemSearch(Model):
     last_update = DateTimeField(default = datetime.now())
     min_price = IntegerField()
     max_price = IntegerField()
-    result = CharField(max_length=10000)
     url = CharField()
 
     class Meta:

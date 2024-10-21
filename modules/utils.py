@@ -27,20 +27,20 @@ def get_logger(name=None):
 
 logger = get_logger()
 
-def check_difference(old_items: list, new_items: list):
-    try:
-        new_list = []
-        for i in new_items:
-            if i in old_items:
-                continue
-            else:
-                new_list.append(i)
-        if len(new_list) > 0:
-            print(f"Old {old_items}\nNew: {new_list}")
-        return new_list
-    except:
-        logger.error("Error checking for similarities between list")
-        return []
+# def check_difference(old_items: list, new_items: list):
+#     try:
+#         new_list = []
+#         for i in new_items:
+#             if i in old_items:
+#                 continue
+#             else:
+#                 new_list.append(i)
+#         if len(new_list) > 0:
+#             print(f"Old {old_items}\nNew: {new_list}")
+#         return new_list
+#     except:
+#         logger.error("Error checking for similarities between list")
+#         return []
     
 def get_tokped_item(id: str):
     try:
@@ -57,31 +57,26 @@ def store_item(data):
         item.price = data["product_price"]
         item.url = data["product_link"]
         item.save()
-        return str(item.id)
+        return str(item.id), False
     except:
         new_item = TokpedItem.create(
             name = data['product_name'],
             price = data['product_price'],
             url = data['product_link']
         )
-        return str(new_item.id)
+        return str(new_item.id), True
 
-def store_search(query_string: str, item_list: list[str], min_price: int, max_price: int, url: str):
+def store_search(query_string: str, min_price: int, max_price: int, url: str):
     try:
-        item_ids = ','.join(item_list)
-        
         search = ItemSearch.get(
             ItemSearch.query_string == query_string
         )
-        old_items = search.result.split(',')
         search.url = url
         search.last_update = datetime.now()
-        # search.result = item_ids
         search.save()
-        return False, old_items
+        return False
     except:
         ItemSearch.create(
-            result = item_ids,
             query_string = query_string,
             min_price = min_price,
             max_price = max_price,
@@ -91,13 +86,11 @@ def store_search(query_string: str, item_list: list[str], min_price: int, max_pr
     
 def update_search(query_string: str, item_list: list[str]):
     try:
-        item_ids = ','.join(item_list)
         
         search = ItemSearch.get(
             ItemSearch.query_string == query_string
         )
-        # old_items = search.result.split(',')
-        search.result = search.result + ',' + item_ids
+        search.last_update = datetime.now()
         search.save()
     except:
         logger.error("Error updating search query")
@@ -180,7 +173,9 @@ def delete_job_data(job_name:str):
     try:
         logger.info(f"Deleting job : {job_name}")
         job = RunningJob.get(RunningJob.job_name == job_name)
+        itemsearch = ItemSearch.get(ItemSearch.query_string == job.query)
         job.delete_instance()
+        itemsearch.delete_instance()
     except:
         logger.error(f"Error deleting job with name : {job_name}" )
         
