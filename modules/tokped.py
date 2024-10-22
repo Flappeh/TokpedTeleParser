@@ -33,17 +33,15 @@ class TokpedParser(Chrome):
         options.add_argument(f"user-agent={get_user_agent()}")
         options.add_argument("--headless=new")
         super().__init__(options, service, keep_alive)
-        # self.driver = Chrome(options=options)
-        # self.driver = Firefox(options=options)
-        self.set_page_load_timeout(SEARCH_INTERVAL * 2 / 3 )
+        # self.set_page_load_timeout(SEARCH_INTERVAL * 2 / 3 )
         
     def browser_get_data(self, url):
         try:
             self.get(url)
-            for _ in range(3):
-                body = self.find_element(by=By.CSS_SELECTOR, value="body")
-                body.send_keys(Keys.PAGE_DOWN)
-                sleep(0.2)
+            # for _ in range(3):
+            #     body = self.find_element(by=By.CSS_SELECTOR, value="body")
+            #     body.send_keys(Keys.PAGE_DOWN)
+            #     sleep(0.2)
             return self.page_source
         except:
             logger.error(f"Error opening browser for url : {url}")
@@ -99,12 +97,15 @@ class TokpedParser(Chrome):
             items = []
             new_items = []
             for i in result:
-                item_id, is_new = store_item(i)
-                if item_id in items:
+                if query.lower() in i['product_name'].lower() or query.lower().strip() in i['product_name'].lower():
+                    item_id, is_new = store_item(i)
+                    if item_id in items:
+                        continue
+                    if is_new:
+                        new_items.append(item_id)
+                    items.append(item_id)
+                else: 
                     continue
-                if is_new:
-                    new_items.append(item_id)
-                items.append(item_id)
             if not new_search:
                 # new_data = check_difference(old_items, items)
                 if len(new_items) > 0:

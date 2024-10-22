@@ -11,7 +11,7 @@ import random
 import string
 import multiprocessing
 import sys 
-
+import copy
 
 logger = get_logger(__name__)
 # Commands
@@ -30,21 +30,25 @@ def validate_price(data: str):
     except:
         return False, None
 
-async def start_query_job(context: ContextTypes.DEFAULT_TYPE):
-    job = context.job
-    data = job.data
-    start_item_search(data)
+async def start_query_job(context: CallbackContext):
+    try:
+        job = context.job
+        data = job.data
+        start_item_search(data)
+    except:
+        logger.error("Error starting query job")
 
 async def schedule_query_job(update: Update, context: CallbackContext, data):
     job_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
     store_job_data(query=data["product_name"], chat_id=data["chat_id"], job_name=job_name)
+    job_data = copy.deepcopy(data)
     context.job_queue.run_repeating(
         callback=start_query_job,
         chat_id=update.effective_chat.id,
-        data=data,
+        data=job_data,
         name=job_name,
         first=0,
-        interval= SEARCH_INTERVAL
+        interval= 30
     )
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -85,6 +89,10 @@ Command yang dapat dilakukan:
 /stop *<job\\-name\\>*  \\-\\> Stop pencarian item berdasarkan nama job yang berjalan
 """,
     parse_mode=ParseMode.MARKDOWN_V2)
+
+async def internal_get_all_jobs(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    job_names = [job.name for job in context.job_queue.jobs()]
+    await update.message.reply_text(f"Jobs are: {job_names}")
 
 async def item_start_command(update: Update, context:CallbackContext):
     if check_time(update):
@@ -135,13 +143,17 @@ async def item_confirm_choices(update: Update, context: CallbackContext):
     elif data.lower() == 'n':
         await update.message.reply_text("Job telah di cancel")
         return ConversationHandler.END
+    
     context.user_data["chat_id"] = update.effective_chat.id
+    
     if check_job_data(context.user_data["product_name"]):
         await update.message.reply_text("Item sudah ada dalam list yang dicari!")
         return ConversationHandler.END
     
     await update.message.reply_text("Mulai proses produk")
+    
     await schedule_query_job(update, context, context.user_data)
+    
     return ConversationHandler.END
 
 async def list_job_command(update: Update, context: CallbackContext):
@@ -290,6 +302,7 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('stop', stop_running_job))
     app.add_handler(CommandHandler('list_job', list_job_command))
+    app.add_handler(CommandHandler('jobs', internal_get_all_jobs))
     app.add_handler(conv_handler)
     # Messages
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
